@@ -9,6 +9,7 @@ import { Home } from '@/screens/Home'
 import { Onboarding } from '@/screens/Onboarding'
 import { More } from '@/screens/More'
 import { Progress } from '@/screens/Placeholder'
+import { ResetPassword } from '@/screens/ResetPassword'
 import { Screener } from '@/screens/Screener'
 import { SignIn } from '@/screens/SignIn'
 import { StarterExposures } from '@/screens/StarterExposures'
@@ -45,6 +46,7 @@ export default function App() {
         */}
         <Route path="/welcome" element={<Onboarding />} />
         <Route path="/signin" element={<SignIn auth={auth} />} />
+        <Route path="/reset" element={<ResetPassword auth={auth} />} />
         <Route path="/screener" element={<Screener />} />
         <Route path="/exposure/:triggerId" element={<ErpSession />} />
       </Routes>
@@ -102,7 +104,10 @@ function OnboardingGate({
     )
   }
 
-  const exempt = location.pathname === '/welcome' || location.pathname === '/signin'
+  const exempt =
+    location.pathname === '/welcome' ||
+    location.pathname === '/signin' ||
+    location.pathname === '/reset'
   if (!onboarded && !exempt) {
     return <Navigate to="/welcome" replace />
   }

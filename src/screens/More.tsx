@@ -53,17 +53,13 @@ export function More({
 function SignIn() {
   return (
     <SignInForm
+      initialMode="signup"
       intro={
-        <>
-          <p className="text-sm leading-relaxed text-ink-600">
-            Right now everything you have written lives only in this browser.
-            Clearing your browsing data would take it with it. Adding an email
-            keeps a copy, and lets you pick up on another device.
-          </p>
-          <p className="text-sm leading-relaxed text-ink-500">
-            We only ever email you a sign-in link. No password, no newsletters.
-          </p>
-        </>
+        <p className="text-sm leading-relaxed text-ink-600">
+          Right now everything you have written lives only in this browser.
+          Clearing your browsing data would take it with it. An account keeps a
+          copy, and lets you pick up on another device.
+        </p>
       }
     />
   )

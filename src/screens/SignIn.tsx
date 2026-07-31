@@ -28,9 +28,8 @@ export function SignIn({ auth }: { auth: AuthState }) {
         <SignInForm
           intro={
             <p className="text-sm leading-relaxed text-ink-600">
-              Enter the email you used before and we will send you a link. Your
-              ladder, your exposures and everything you have written will come
-              back to this device.
+              Sign in and your ladder, your exposures and everything you have
+              written will come back to this device.
             </p>
           }
         />
