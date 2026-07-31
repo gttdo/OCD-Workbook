@@ -10,6 +10,7 @@ import { Onboarding } from '@/screens/Onboarding'
 import { More } from '@/screens/More'
 import { Progress } from '@/screens/Placeholder'
 import { Screener } from '@/screens/Screener'
+import { SignIn } from '@/screens/SignIn'
 import { StarterExposures } from '@/screens/StarterExposures'
 import { UrgeTimer } from '@/screens/UrgeTimer'
 import { getLocalUserId, hasOnboardedLocally } from '@/lib/session'
@@ -21,7 +22,7 @@ export default function App() {
   const syncState = useSync(auth.signedIn)
 
   return (
-    <OnboardingGate>
+    <OnboardingGate auth={auth} syncState={syncState}>
       <Routes>
         {/* Top-level destinations carry the nav shell. */}
         <Route element={<AppShell />}>
@@ -43,6 +44,7 @@ export default function App() {
           escape, which is the behaviour the method exists to interrupt.
         */}
         <Route path="/welcome" element={<Onboarding />} />
+        <Route path="/signin" element={<SignIn auth={auth} />} />
         <Route path="/screener" element={<Screener />} />
         <Route path="/exposure/:triggerId" element={<ErpSession />} />
       </Routes>
@@ -56,7 +58,15 @@ export default function App() {
  * an interrogation, not an introduction. Nobody reaches it now without first
  * being told what this is and what they are agreeing to.
  */
-function OnboardingGate({ children }: { children: React.ReactNode }) {
+function OnboardingGate({
+  children,
+  auth,
+  syncState,
+}: {
+  children: React.ReactNode
+  auth: ReturnType<typeof useAuth>
+  syncState: ReturnType<typeof useSync>
+}) {
   const location = useLocation()
 
   // Wrapped in an object on purpose. Dexie's `get` resolves to `undefined` when
@@ -75,7 +85,25 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
   // The localStorage mirror closes the render-vs-live-query race when someone
   // finishes onboarding and we navigate away in the same tick.
   const onboarded = hasOnboardedLocally() || Boolean(result.profile?.onboardedAt)
-  if (!onboarded && location.pathname !== '/welcome') {
+
+  /*
+    A returning user arriving from a magic link has a session but no local
+    profile yet — the pull has not finished. Redirecting on that would drop
+    them into onboarding they completed months ago, and they would have no idea
+    why. Hold instead until the first sync settles.
+  */
+  if (!onboarded && auth.signedIn && syncState.kind === 'syncing') {
+    return (
+      <div className="mx-auto flex min-h-screen w-full max-w-xl items-center justify-center px-6">
+        <p className="text-[15px] leading-relaxed text-ink-500">
+          Bringing your work back to this device…
+        </p>
+      </div>
+    )
+  }
+
+  const exempt = location.pathname === '/welcome' || location.pathname === '/signin'
+  if (!onboarded && !exempt) {
     return <Navigate to="/welcome" replace />
   }
 
