@@ -43,8 +43,12 @@ create type exposure_kind as enum ('in_vivo', 'uncertainty_starter', 'imaginal')
 
 -- ─── helpers ─────────────────────────────────────────────────────────────────
 
+-- search_path is pinned. A mutable search_path in a trigger function is a
+-- privilege escalation vector — a caller can shadow an unqualified name.
 create or replace function set_updated_at() returns trigger
-language plpgsql as $$
+language plpgsql
+set search_path = ''
+as $$
 begin
   new.updated_at = now();
   return new;
@@ -343,9 +347,13 @@ end $$;
 
 -- ─── views: the dashboard ────────────────────────────────────────────────────
 
--- The hero visual. Session number is derived, never stored, because offline
--- sessions sync out of order.
-create view v_habituation_curve as
+-- EVERY view here MUST set security_invoker. Postgres views run with the
+-- permissions of their creator by default, which bypasses row level security
+-- entirely — and Supabase grants anon/authenticated select on new objects in
+-- public. Without this, anyone holding the public anon key could read every
+-- user's trigger labels and distress ratings. Do not remove it, and do not add
+-- a view without it.
+create view v_habituation_curve with (security_invoker = true) as
 select
   es.user_id,
   es.trigger_id,
@@ -367,7 +375,7 @@ where es.deleted_at is null
 
 -- Graduation rule: three consecutive sessions with peak anxiety <= 2.
 -- "Boredom is the opposite of anxiety and is therefore your friend."
-create view v_graduation_candidate as
+create view v_graduation_candidate with (security_invoker = true) as
 with ranked as (
   select
     user_id, trigger_id, trigger_label, session_number, anxiety_peak,
@@ -382,7 +390,7 @@ having count(*) = 3 and max(anxiety_peak) <= 2;
 
 -- Time reclaimed. Moves immediately, unlike the habituation curve — which is
 -- why this leads the dashboard in weeks 1–2, when anxiety often rises first.
-create view v_time_reclaimed as
+create view v_time_reclaimed with (security_invoker = true) as
 select
   user_id,
   date_trunc('week', occurred_at) as week,
