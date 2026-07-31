@@ -35,9 +35,12 @@ export function Stat({
 }) {
   return (
     <div className="rounded-xl bg-white border border-ink-200 p-4">
-      <div className="text-2xl font-semibold tabular-nums text-ink-900">
-        {value}
-      </div>
+      {/*
+        Proportional figures, not tabular. Equal-width digits make a large
+        standalone number look loose; tabular belongs where numbers align
+        vertically, like table rows and axis ticks.
+      */}
+      <div className="text-2xl font-semibold text-ink-900">{value}</div>
       <div className="mt-0.5 text-sm text-ink-600">{label}</div>
       {hint && <div className="mt-1 text-xs text-ink-400">{hint}</div>}
     </div>
