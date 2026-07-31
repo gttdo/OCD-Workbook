@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Screen } from '@/components/AppShell'
 import { Button } from '@/components/ui/Button'
 import { SignInForm } from '@/components/SignInForm'
-import { signOut } from '@/lib/supabase'
+import { setPassword, signOut } from '@/lib/supabase'
 import { sync } from '@/lib/sync'
 import type { AuthState } from '@/lib/useAuth'
 import type { SyncState } from '@/lib/useSync'
@@ -110,9 +110,89 @@ function SignedIn({
         </Button>
       </div>
 
+      <PasswordSetter />
+
       <p className="text-xs leading-relaxed text-ink-400">
         Signing out leaves everything on this device untouched.
       </p>
+    </div>
+  )
+}
+
+/**
+ * Set or change a password without leaving the app.
+ *
+ * Someone signed in by magic link otherwise has no route to a password except
+ * the forgot-password flow — which sends them back to their inbox, the exact
+ * thing they were trying to stop doing.
+ */
+function PasswordSetter() {
+  const [open, setOpen] = useState(false)
+  const [password, setPasswordValue] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [done, setDone] = useState(false)
+
+  async function save() {
+    setBusy(true)
+    setError(null)
+    const { error } = await setPassword(password)
+    setBusy(false)
+    if (error) {
+      setError(error)
+    } else {
+      setDone(true)
+      setPasswordValue('')
+    }
+  }
+
+  if (done) {
+    return (
+      <p className="rounded-lg bg-calm-50 p-3 text-sm leading-relaxed text-ink-700">
+        Password saved. You can sign in with it from now on.
+      </p>
+    )
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="tap text-left text-sm text-ink-500 underline decoration-ink-300
+                   underline-offset-4 active:text-ink-800"
+      >
+        Set or change your password
+      </button>
+    )
+  }
+
+  return (
+    <div className="space-y-2 border-t border-ink-100 pt-3">
+      <label htmlFor="new-pw" className="block text-sm font-medium text-ink-700">
+        New password
+      </label>
+      <input
+        id="new-pw"
+        type="password"
+        autoComplete="new-password"
+        value={password}
+        onChange={(e) => setPasswordValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && password.length >= 8 && !busy) void save()
+        }}
+        placeholder="At least 8 characters"
+        className="tap w-full rounded-lg border border-ink-300 px-3 py-2.5 text-[16px]
+                   placeholder:text-ink-300 focus:border-calm-600 focus:outline-none"
+      />
+      <p className="text-xs leading-relaxed text-ink-400">
+        This protects notes about your own symptoms. Please do not reuse a
+        password from somewhere else.
+      </p>
+      {error && <p className="text-sm leading-relaxed text-amber-800">{error}</p>}
+      <Button full disabled={busy || password.length < 8} onClick={() => void save()}>
+        {busy ? 'Saving…' : 'Save password'}
+      </Button>
     </div>
   )
 }
