@@ -18,14 +18,6 @@ export function Progress() {
   )
 }
 
-export function More() {
-  return (
-    <Screen title="More">
-      <Empty>Settings, backup, and what to bring to your next session.</Empty>
-    </Screen>
-  )
-}
-
 function Empty({ children }: { children: React.ReactNode }) {
   return (
     <p className="rounded-xl bg-ink-100 p-4 text-sm leading-relaxed text-ink-500">

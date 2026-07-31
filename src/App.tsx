@@ -7,7 +7,8 @@ import { ErpSession } from '@/screens/ErpSession'
 import { FearLadder } from '@/screens/FearLadder'
 import { Home } from '@/screens/Home'
 import { Onboarding } from '@/screens/Onboarding'
-import { More, Progress } from '@/screens/Placeholder'
+import { More } from '@/screens/More'
+import { Progress } from '@/screens/Placeholder'
 import { Screener } from '@/screens/Screener'
 import { StarterExposures } from '@/screens/StarterExposures'
 import { getLocalUserId, hasOnboardedLocally } from '@/lib/session'
@@ -28,7 +29,10 @@ export default function App() {
           <Route path="/avoidance" element={<AvoidanceInventory />} />
           <Route path="/practice" element={<StarterExposures />} />
           <Route path="/progress" element={<Progress />} />
-          <Route path="/more" element={<More />} />
+          <Route
+            path="/more"
+            element={<More auth={auth} syncState={syncState} />}
+          />
         </Route>
 
         {/*
