@@ -8,6 +8,7 @@ import { Home } from '@/screens/Home'
 import { Onboarding } from '@/screens/Onboarding'
 import { More, Progress } from '@/screens/Placeholder'
 import { Screener } from '@/screens/Screener'
+import { StarterExposures } from '@/screens/StarterExposures'
 import { getLocalUserId, hasOnboardedLocally } from '@/lib/session'
 import { useAuth } from '@/lib/useAuth'
 import { useSync } from '@/lib/useSync'
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/" element={<Home syncState={syncState} />} />
           <Route path="/ladder" element={<FearLadder />} />
           <Route path="/avoidance" element={<AvoidanceInventory />} />
+          <Route path="/practice" element={<StarterExposures />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/more" element={<More />} />
         </Route>
