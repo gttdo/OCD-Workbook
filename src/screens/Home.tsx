@@ -67,6 +67,17 @@ export function Home({ syncState }: { syncState: SyncState }) {
         </h2>
 
         {/*
+          First, because this is the only screen someone opens mid-crisis. The
+          rest can be found; this has to be immediate.
+        */}
+        <Card to="/urge">
+          <Row
+            title="An urge right now"
+            sub="Hold off, slow it down, or let it go"
+          />
+        </Card>
+
+        {/*
           Practice sits above the ladder on purpose. Asking someone on day one
           to face the thing they are most afraid of is a wall; a small win in
           five minutes is a door.

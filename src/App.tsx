@@ -11,6 +11,7 @@ import { More } from '@/screens/More'
 import { Progress } from '@/screens/Placeholder'
 import { Screener } from '@/screens/Screener'
 import { StarterExposures } from '@/screens/StarterExposures'
+import { UrgeTimer } from '@/screens/UrgeTimer'
 import { getLocalUserId, hasOnboardedLocally } from '@/lib/session'
 import { useAuth } from '@/lib/useAuth'
 import { useSync } from '@/lib/useSync'
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/ladder" element={<FearLadder />} />
           <Route path="/avoidance" element={<AvoidanceInventory />} />
           <Route path="/practice" element={<StarterExposures />} />
+          <Route path="/urge" element={<UrgeTimer />} />
           <Route path="/progress" element={<Progress />} />
           <Route
             path="/more"
