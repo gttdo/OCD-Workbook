@@ -4,17 +4,6 @@ import { Screen } from '@/components/AppShell'
  * Honest placeholders. An empty destination that says what will live there
  * beats one that pretends to be finished.
  */
-export function Ladder() {
-  return (
-    <Screen
-      title="Your ladder"
-      intro="The things you avoid, ordered from least to most frightening. You work up it one rung at a time."
-    >
-      <Empty>Nothing here yet — the ladder is built from your avoidance list.</Empty>
-    </Screen>
-  )
-}
-
 export function Progress() {
   return (
     <Screen

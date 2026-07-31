@@ -128,9 +128,11 @@ create table trigger (
 );
 
 create index on trigger (user_id, status);
-create unique index trigger_ladder_rank_uniq
-  on trigger (user_id, ladder_rank)
-  where ladder_rank is not null and deleted_at is null;
+-- Deliberately NOT unique. Reordering a ladder swaps ranks between rows, which
+-- transiently duplicates a value; a partial unique index cannot be deferred in
+-- Postgres, so the sync upsert would fail mid-reorder. Ordering is enforced in
+-- application code, with created_at breaking any tie.
+create index on trigger (user_id, ladder_rank) where ladder_rank is not null;
 
 -- Status history. A graduated fear can come back; we keep the arc rather than
 -- overwriting it, because the relapse-prevention work depends on seeing it.

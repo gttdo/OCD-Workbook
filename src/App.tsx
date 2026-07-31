@@ -2,9 +2,11 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
 import { AppShell } from '@/components/AppShell'
+import { AvoidanceInventory } from '@/screens/AvoidanceInventory'
+import { FearLadder } from '@/screens/FearLadder'
 import { Home } from '@/screens/Home'
 import { Onboarding } from '@/screens/Onboarding'
-import { Ladder, More, Progress } from '@/screens/Placeholder'
+import { More, Progress } from '@/screens/Placeholder'
 import { Screener } from '@/screens/Screener'
 import { getLocalUserId, hasOnboardedLocally } from '@/lib/session'
 import { useAuth } from '@/lib/useAuth'
@@ -20,7 +22,8 @@ export default function App() {
         {/* Top-level destinations carry the nav shell. */}
         <Route element={<AppShell />}>
           <Route path="/" element={<Home syncState={syncState} />} />
-          <Route path="/ladder" element={<Ladder />} />
+          <Route path="/ladder" element={<FearLadder />} />
+          <Route path="/avoidance" element={<AvoidanceInventory />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/more" element={<More />} />
         </Route>
