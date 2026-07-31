@@ -22,10 +22,25 @@ interface TableSpec {
   remote: string
   /** Append-only tables are never updated, so they push but do not pull. */
   appendOnly?: boolean
+  /**
+   * Which column carries ownership remotely. Everything is `user_id` except
+   * `profile`, which is keyed by the auth user id itself and has no separate
+   * owner column — pushing one there fails with "column user_id does not
+   * exist", and filtering a pull by it fails the same way.
+   */
+  ownerColumn?: 'user_id' | 'id'
+  /** Local-only fields with no remote column. */
+  localOnly?: string[]
 }
 
 const TABLES: TableSpec[] = [
-  { local: 'profile', remote: 'profile' },
+  {
+    local: 'profile',
+    remote: 'profile',
+    ownerColumn: 'id',
+    // `profile` has neither of these remotely.
+    localOnly: ['userId', 'deletedAt'],
+  },
   { local: 'screenings', remote: 'screening' },
   { local: 'values', remote: 'value' },
   { local: 'commitments', remote: 'commitment' },
@@ -124,10 +139,18 @@ async function push(spec: TableSpec, userId: string): Promise<number> {
   const dirty = await table.filter((r) => r.syncedAt == null).toArray()
   if (dirty.length === 0) return 0
 
+  const owner = spec.ownerColumn ?? 'user_id'
+
   const rows = dirty.map((r) => {
+    const clean: Record<string, unknown> = { ...r }
+    delete clean.syncedAt
+    for (const field of spec.localOnly ?? []) delete clean[field]
+
     // Rows created before sign-in carry a device-local owner id; re-key them.
-    const { syncedAt: _ignored, ...rest } = r
-    return keysToSnake({ ...rest, userId })
+    if (owner === 'user_id') clean.userId = userId
+    else clean.id = userId
+
+    return keysToSnake(clean)
   })
 
   const { error } = await supabase!.from(spec.remote).upsert(rows, {
@@ -147,11 +170,12 @@ async function push(spec: TableSpec, userId: string): Promise<number> {
  */
 async function pull(spec: TableSpec, userId: string): Promise<number> {
   const since = getCursor()[spec.remote] ?? '1970-01-01T00:00:00Z'
+  const owner = spec.ownerColumn ?? 'user_id'
 
   const { data, error } = await supabase!
     .from(spec.remote)
     .select('*')
-    .eq('user_id', userId)
+    .eq(owner, userId)
     .gt('updated_at', since)
     .order('updated_at', { ascending: true })
     .limit(1000)
@@ -169,6 +193,9 @@ async function pull(spec: TableSpec, userId: string): Promise<number> {
 
   for (const raw of data) {
     const remote = keysToCamel(raw as Record<string, unknown>)
+    // `profile` has no remote owner column, but the local model carries one and
+    // adoptLocalRecords filters on it. Put it back.
+    if (owner === 'id') remote.userId = userId
     const id = remote.id as string
     const remoteUpdated = remote.updatedAt as string
     if (remoteUpdated > newest) newest = remoteUpdated
