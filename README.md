@@ -75,7 +75,39 @@ npm run dev
 
 The app runs fully without Supabase credentials — it degrades to "works, but
 this device only". To enable sync, copy `.env.example` to `.env.local`, fill in
-your project URL and anon key, and apply `supabase/migrations/0001_initial_schema.sql`.
+your project URL and anon key, and apply the migrations in
+`supabase/migrations/` in order.
+
+## Deploying
+
+Two things bite here, and both have already cost an afternoon:
+
+**Environment variables are baked in at build time.** Vite inlines
+`import.meta.env` values into the bundle, so `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY` must exist in the host's Production environment
+*before the build runs*. Setting them afterwards changes nothing until a fresh
+build happens — and a "Redeploy" that reuses the build cache will happily
+republish the old bundle without them. Force a clean build, then confirm the
+credentials actually landed:
+
+```bash
+curl -s https://<your-domain>/ | grep -o '/assets/index-[^"]*\.js'   # find the bundle
+curl -s https://<your-domain>/assets/index-XXXX.js | grep -c 'supabase.co'
+```
+
+If that count is zero, the deployed app has no backend, and the UI will
+correctly say backup is not set up.
+
+**Client-side routing needs a rewrite.** Vercel's Vite preset does not add an
+SPA fallback, so `/more`, `/signin` and `/reset` return 404 on a direct request
+— including the `/reset` link sent by a password email. `vercel.json` handles
+this. Vercel checks the filesystem before rewrites, so a plain catch-all is
+safe and the service worker, manifest and icons still serve as themselves.
+
+**Also required in Supabase:** add the deployed origin to Authentication → URL
+Configuration → Redirect URLs, and replace the built-in email sender with real
+SMTP before anyone else uses this — the built-in one is rate limited to a
+handful of messages per hour and will silently fail on signups and resets.
 
 ## Content rights
 
