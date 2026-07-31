@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Screen } from '@/components/AppShell'
 import { Button } from '@/components/ui/Button'
-import { SignInForm } from '@/components/SignInForm'
-import { setPassword, signOut } from '@/lib/supabase'
+import { Link } from 'react-router-dom'
+import { isSupabaseConfigured, setPassword, signOut } from '@/lib/supabase'
 import { sync } from '@/lib/sync'
 import type { AuthState } from '@/lib/useAuth'
 import type { SyncState } from '@/lib/useSync'
@@ -30,8 +30,13 @@ export function More({
           <h2 className="mb-3 text-sm font-medium text-ink-500">Your data</h2>
           {auth.signedIn ? (
             <SignedIn email={auth.email} syncState={syncState} />
+          ) : isSupabaseConfigured ? (
+            <SignedOut />
           ) : (
-            <SignIn />
+            <p className="rounded-xl bg-ink-100 p-4 text-sm leading-relaxed text-ink-600">
+              Backup is not set up on this build, so everything stays on this
+              device.
+            </p>
           )}
         </section>
 
@@ -50,18 +55,35 @@ export function More({
   )
 }
 
-function SignIn() {
+/**
+ * Signed out, More states the situation and points at the sign-in screen. It
+ * does not inline the form.
+ *
+ * Settings is the wrong place to host a signup: it buries a primary action in
+ * a junk drawer, it duplicates /signin, and it hands the largest block on the
+ * page to the one thing a signed-in person never needs again.
+ */
+function SignedOut() {
   return (
-    <SignInForm
-      initialMode="signup"
-      intro={
-        <p className="text-sm leading-relaxed text-ink-600">
-          Right now everything you have written lives only in this browser.
-          Clearing your browsing data would take it with it. An account keeps a
-          copy, and lets you pick up on another device.
-        </p>
-      }
-    />
+    <Link
+      to="/signin"
+      className="tap block rounded-xl border border-ink-200 bg-white p-4 active:bg-ink-50"
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="font-medium text-ink-900">
+            Everything is on this device only
+          </div>
+          <div className="mt-0.5 text-sm leading-relaxed text-ink-500">
+            Clearing your browsing data would take it with it. An account keeps
+            a copy and lets you pick up elsewhere.
+          </div>
+        </div>
+        <span aria-hidden className="flex-none text-ink-400">
+          →
+        </span>
+      </div>
+    </Link>
   )
 }
 
