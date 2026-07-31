@@ -79,6 +79,29 @@ export interface SyncResult {
   errors: string[]
 }
 
+/**
+ * Supabase rejects with a PostgrestError — a plain object, not an Error — so
+ * `String(err)` renders it as "[object Object]". That is exactly how a real
+ * schema mismatch stayed invisible on the settings screen while reporting
+ * itself as a failure.
+ */
+function describeError(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (err && typeof err === 'object') {
+    const e = err as {
+      message?: string
+      details?: string
+      hint?: string
+      code?: string
+    }
+    const parts = [e.message, e.details, e.hint, e.code && `[${e.code}]`]
+      .filter(Boolean)
+      .join(' — ')
+    return parts || JSON.stringify(err)
+  }
+  return String(err)
+}
+
 let inFlight: Promise<SyncResult> | null = null
 
 /** Serialised so overlapping triggers (focus, reconnect, timer) can't race. */
@@ -109,9 +132,7 @@ async function runSync(): Promise<SyncResult> {
       result.pushed += await push(spec, userId)
       if (!spec.appendOnly) result.pulled += await pull(spec, userId)
     } catch (err) {
-      result.errors.push(
-        `${spec.remote}: ${err instanceof Error ? err.message : String(err)}`,
-      )
+      result.errors.push(`${spec.remote}: ${describeError(err)}`)
     }
   }
 
@@ -119,9 +140,7 @@ async function runSync(): Promise<SyncResult> {
   try {
     result.pulled += await pullPrompts()
   } catch (err) {
-    result.errors.push(
-      `exposure_prompt: ${err instanceof Error ? err.message : String(err)}`,
-    )
+    result.errors.push(`exposure_prompt: ${describeError(err)}`)
   }
 
   return result
