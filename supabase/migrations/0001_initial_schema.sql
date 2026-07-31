@@ -224,6 +224,14 @@ create table exposure_session (
   started_at   timestamptz not null default now(),
   ended_at     timestamptz,
 
+  -- Expectancy violation. Modern ERP holds that the active ingredient is not
+  -- anxiety decaying but a prediction being disconfirmed: you expect something
+  -- specific, it does not happen, and the belief updates. Captured BEFORE the
+  -- exposure so it cannot be revised afterwards into something less wrong.
+  predicted_anxiety smallint check (predicted_anxiety between 1 and 10),
+  predicted_outcome text,
+  actual_outcome    text,
+
   anxiety_before smallint check (anxiety_before between 1 and 10),
   anxiety_peak   smallint check (anxiety_peak   between 1 and 10),
   anxiety_after  smallint check (anxiety_after  between 1 and 10),

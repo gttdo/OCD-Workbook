@@ -144,6 +144,14 @@ export interface ExposureSession extends SyncMeta {
   plannedFor?: string | null
   startedAt: string
   endedAt?: string | null
+  /**
+   * Expectancy violation. The active ingredient in modern ERP is a prediction
+   * being disconfirmed, not anxiety decaying. Captured before the exposure so
+   * it cannot be quietly revised into something less wrong afterwards.
+   */
+  predictedAnxiety?: Anxiety | null
+  predictedOutcome?: string | null
+  actualOutcome?: string | null
   anxietyBefore?: Anxiety | null
   anxietyPeak?: Anxiety | null
   anxietyAfter?: Anxiety | null

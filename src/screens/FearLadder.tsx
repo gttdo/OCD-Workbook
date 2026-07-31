@@ -161,10 +161,23 @@ export function FearLadder() {
               </div>
 
               {expanded === t.id && (
-                <GoalField
-                  initial={t.goalStatement ?? ''}
-                  onSave={(v) => void setGoal(t.id, v)}
-                />
+                <>
+                  <GoalField
+                    initial={t.goalStatement ?? ''}
+                    onSave={(v) => void setGoal(t.id, v)}
+                  />
+                  {/*
+                    An offer on every rung, not just the first. Which one you
+                    are ready for is your call and your therapist's, not ours.
+                  */}
+                  <Link
+                    to={`/exposure/${t.id}`}
+                    className="tap mt-3 block w-full rounded-xl bg-ink-900 px-4 py-3
+                               text-center font-medium text-white active:bg-ink-800"
+                  >
+                    Work on this one
+                  </Link>
+                </>
               )}
             </li>
           ))}

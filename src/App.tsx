@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db'
 import { AppShell } from '@/components/AppShell'
 import { AvoidanceInventory } from '@/screens/AvoidanceInventory'
+import { ErpSession } from '@/screens/ErpSession'
 import { FearLadder } from '@/screens/FearLadder'
 import { Home } from '@/screens/Home'
 import { Onboarding } from '@/screens/Onboarding'
@@ -37,6 +38,7 @@ export default function App() {
         */}
         <Route path="/welcome" element={<Onboarding />} />
         <Route path="/screener" element={<Screener />} />
+        <Route path="/exposure/:triggerId" element={<ErpSession />} />
       </Routes>
     </OnboardingGate>
   )
