@@ -1,0 +1,46 @@
+import { Screen } from '@/components/AppShell'
+
+/**
+ * Honest placeholders. An empty destination that says what will live there
+ * beats one that pretends to be finished.
+ */
+export function Ladder() {
+  return (
+    <Screen
+      title="Your ladder"
+      intro="The things you avoid, ordered from least to most frightening. You work up it one rung at a time."
+    >
+      <Empty>Nothing here yet — the ladder is built from your avoidance list.</Empty>
+    </Screen>
+  )
+}
+
+export function Progress() {
+  return (
+    <Screen
+      title="Progress"
+      intro="What you have done, and what has changed because of it."
+    >
+      <Empty>
+        Once you have logged a few exposures, this is where the detail lives —
+        including how your distress has moved across repetitions.
+      </Empty>
+    </Screen>
+  )
+}
+
+export function More() {
+  return (
+    <Screen title="More">
+      <Empty>Settings, backup, and what to bring to your next session.</Empty>
+    </Screen>
+  )
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="rounded-xl bg-ink-100 p-4 text-sm leading-relaxed text-ink-500">
+      {children}
+    </p>
+  )
+}

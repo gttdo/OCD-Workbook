@@ -1,0 +1,19 @@
+node_modules
+dist
+dist-ssr
+*.local
+*.tsbuildinfo
+dev-dist
+.DS_Store
+.env
+.env.local
+.env.*.local
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Source workbook — copyrighted (© 2018 Between Sessions Resources),
+# licensed for personal use but not for redistribution. Keep it local.
+*.pdf
