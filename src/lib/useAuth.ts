@@ -10,6 +10,22 @@ export interface AuthState {
 }
 
 /**
+ * Development-only stand-in for a session.
+ *
+ * Every screen now sits behind auth, which makes UI work unverifiable without
+ * signing in — and signing in means handling a real credential. Setting
+ * VITE_DEV_USER_ID in .env.local pretends a session exists so screens can be
+ * opened and looked at.
+ *
+ * This cannot reach production: `import.meta.env.DEV` is false in a build, so
+ * the branch is dead code and gets stripped. It also grants nothing — Supabase
+ * still has no session, so sync no-ops and RLS would reject any request.
+ */
+const DEV_USER_ID = import.meta.env.DEV
+  ? (import.meta.env.VITE_DEV_USER_ID ?? null)
+  : null
+
+/**
  * Auth is required. Every screen that writes data renders behind the gate in
  * App.tsx, so `currentUserId()` is safe to call from any of them.
  *
@@ -25,6 +41,17 @@ export function useAuth(): AuthState {
   })
 
   useEffect(() => {
+    if (DEV_USER_ID) {
+      setCurrentUserId(DEV_USER_ID)
+      setState({
+        loading: false,
+        userId: DEV_USER_ID,
+        email: 'dev@localhost',
+        signedIn: true,
+      })
+      return
+    }
+
     if (!supabase) {
       setState({ loading: false, userId: null, email: null, signedIn: false })
       return

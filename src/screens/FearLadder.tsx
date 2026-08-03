@@ -5,18 +5,22 @@ import { db, nowIso } from '@/db'
 import type { Trigger } from '@/db/types'
 import { Screen } from '@/components/AppShell'
 import { Teach } from '@/components/Teach'
+import { Button } from '@/components/ui/Button'
 import { unretire } from '@/lib/graduation'
 
 /**
- * The fear ladder.
+ * The ladder.
  *
- * Order is the person's, not ours. We seed it from the distress ratings they
- * already gave — least first, because that is where you start — but every
- * position is theirs to change and nothing here tells anyone what to face
- * next. That is a deliberate line: software that performs patient-specific
- * analysis and issues directives is a regulated device, and more importantly,
- * being told what to face by an app is the wrong relationship to have with
- * your own treatment.
+ * Structured around one question: what do I do now. An earlier version showed
+ * a flat list with reorder arrows on every row and hid the actual action —
+ * "work on this one" — behind a tap with nothing to suggest tapping. It read
+ * as an inventory rather than a place to act, and people could not tell what
+ * was being asked of them.
+ *
+ * So: one rung is in focus with the action on it, the rest are quiet and one
+ * tap away, and reordering is a mode you enter rather than chrome you wade
+ * through. Which rung is in focus is a default, not an instruction — any of
+ * them can be picked up at any time, and the copy says so.
  */
 export function FearLadder() {
   const all = useLiveQuery(
@@ -24,15 +28,16 @@ export function FearLadder() {
     [],
     [],
   )
-  const triggers = all.filter((t) => t.status !== 'graduated')
-  const retired = all
-    .filter((t) => t.status === 'graduated')
-    .sort((a, b) => (b.graduatedAt ?? '').localeCompare(a.graduatedAt ?? ''))
+  const sessions = useLiveQuery(
+    () => db.exposureSessions.filter((s) => !s.deletedAt && !!s.endedAt).toArray(),
+    [],
+    [],
+  )
 
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [reordering, setReordering] = useState(false)
+  const [focusId, setFocusId] = useState<string | null>(null)
 
-  // Seed from baseline distress; once ranked, rank wins. created_at breaks ties.
-  const ordered = [...triggers].sort((a, b) => {
+  const active = [...all.filter((t) => t.status !== 'graduated')].sort((a, b) => {
     const ar = a.ladderRank, br = b.ladderRank
     if (ar != null && br != null) return ar - br
     if (ar != null) return -1
@@ -40,6 +45,17 @@ export function FearLadder() {
     const byAnxiety = (a.baselineAnxiety ?? 0) - (b.baselineAnxiety ?? 0)
     return byAnxiety !== 0 ? byAnxiety : a.createdAt.localeCompare(b.createdAt)
   })
+
+  const retired = all
+    .filter((t) => t.status === 'graduated')
+    .sort((a, b) => (b.graduatedAt ?? '').localeCompare(a.graduatedAt ?? ''))
+
+  const sessionCount = (id: string) =>
+    sessions.filter((s) => s.triggerId === id).length
+
+  // A default, not a directive: the easiest rung not yet retired.
+  const focus = active.find((t) => t.id === focusId) ?? active[0] ?? null
+  const rest = active.filter((t) => t.id !== focus?.id)
 
   async function persist(list: Trigger[]) {
     const ts = nowIso()
@@ -56,8 +72,8 @@ export function FearLadder() {
 
   async function move(index: number, direction: -1 | 1) {
     const target = index + direction
-    if (target < 0 || target >= ordered.length) return
-    const next = [...ordered]
+    if (target < 0 || target >= active.length) return
+    const next = [...active]
     const [item] = next.splice(index, 1)
     next.splice(target, 0, item!)
     await persist(next)
@@ -71,16 +87,13 @@ export function FearLadder() {
     })
   }
 
-  // Checked against ALL triggers, not just active ones. Someone who has retired
-  // everything has an empty ladder for the best possible reason, and telling
-  // them to start a list would erase what they just finished.
   if (all.length === 0) {
     return (
       <Screen title="Your ladder">
         <div className="space-y-4">
           <p className="rounded-xl bg-ink-100 p-4 text-sm leading-relaxed text-ink-600">
-            Your ladder is built from the things you avoid. Once you have listed
-            a few, you can put them in order here.
+            Your ladder is the list of things you avoid, ordered from easiest to
+            hardest. You work through it one at a time.
           </p>
           <Link
             to="/avoidance"
@@ -94,65 +107,47 @@ export function FearLadder() {
     )
   }
 
-  return (
-    <Screen
-      title="Your ladder"
-      intro="Least difficult first. That is where you start, and you work down the list over time."
-    >
-      <div className="space-y-6">
-        {triggers.length === 0 && (
+  if (active.length === 0) {
+    return (
+      <Screen title="Your ladder">
+        <div className="space-y-6">
           <p className="rounded-xl border border-calm-600 bg-calm-50 p-4 text-[15px] leading-relaxed text-ink-800">
-            Nothing left on the ladder. Everything you listed is retired — if
+            Nothing left on the ladder — everything you listed is retired. If
             something new comes up, or one of these returns, you can add it back
             any time.
           </p>
-        )}
+          <Link
+            to="/avoidance"
+            className="tap block text-sm text-ink-500 underline decoration-ink-300 underline-offset-4"
+          >
+            Add something to the list
+          </Link>
+          <Retired triggers={retired} />
+        </div>
+      </Screen>
+    )
+  }
 
-        {triggers.length > 0 && (
-        <Teach id="ladder" title="Why order matters">
-          <p>
-            Working upward means each step is hard but survivable, and each one
-            you get through makes the next look smaller.
+  if (reordering) {
+    return (
+      <Screen title="Put them in order">
+        <div className="space-y-6">
+          <p className="text-[15px] leading-relaxed text-ink-600">
+            Easiest at the top. We ordered these by the ratings you gave, but
+            only you know what a 6 actually feels like — move anything that
+            feels wrong.
           </p>
-          <p>
-            This is your order, not ours. We put them in the order your ratings
-            suggested — move anything that feels wrong. Only you know what a 6
-            actually feels like.
-          </p>
-        </Teach>
-        )}
 
-        <ol className="space-y-2">
-          {ordered.map((t, i) => (
-            <li
-              key={t.id}
-              className="rounded-xl border border-ink-200 bg-white p-3"
-            >
-              <div className="flex items-center gap-3">
-                <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-ink-100 text-sm font-semibold tabular-nums text-ink-700">
-                  {t.baselineAnxiety ?? '–'}
+          <ol className="space-y-2">
+            {active.map((t, i) => (
+              <li
+                key={t.id}
+                className="flex items-center gap-3 rounded-xl border border-ink-200 bg-white p-3"
+              >
+                <span className="flex-1 text-[15px] text-ink-800">{t.label}</span>
+                <span className="flex-none text-xs text-ink-400">
+                  {t.baselineAnxiety ?? '–'}/10
                 </span>
-
-                <button
-                  type="button"
-                  onClick={() => setExpanded(expanded === t.id ? null : t.id)}
-                  className="flex-1 text-left"
-                >
-                  <span className="block text-[15px] text-ink-800">
-                    {t.label}
-                  </span>
-                  {i === 0 && (
-                    <span className="mt-0.5 block text-xs text-calm-700">
-                      Start here
-                    </span>
-                  )}
-                  {t.goalStatement && (
-                    <span className="mt-0.5 block text-xs italic text-ink-400">
-                      so I can {t.goalStatement}
-                    </span>
-                  )}
-                </button>
-
                 <div className="flex flex-none flex-col">
                   <button
                     type="button"
@@ -166,44 +161,129 @@ export function FearLadder() {
                   <button
                     type="button"
                     onClick={() => void move(i, 1)}
-                    disabled={i === ordered.length - 1}
+                    disabled={i === active.length - 1}
                     aria-label={`Move ${t.label} later`}
                     className="tap px-2 text-ink-400 disabled:opacity-20 active:text-ink-800"
                   >
                     ↓
                   </button>
                 </div>
+              </li>
+            ))}
+          </ol>
+
+          <Button full onClick={() => setReordering(false)}>
+            Done
+          </Button>
+        </div>
+      </Screen>
+    )
+  }
+
+  const done = focus ? sessionCount(focus.id) : 0
+
+  return (
+    <Screen title="Your ladder">
+      <div className="space-y-6">
+        <Teach id="ladder-what" title="What you do here">
+          <p>
+            Pick one thing and face it on purpose, without doing the compulsion
+            that usually follows. Afterwards you record what actually happened.
+          </p>
+          <p>
+            Most people repeat the same one several times before it starts to
+            feel boring. Boring is the goal — it means the fear has stopped
+            paying out.
+          </p>
+        </Teach>
+
+        {focus && (
+          <section>
+            <h2 className="mb-2 text-sm font-medium text-ink-500">
+              Working on now
+            </h2>
+            <div className="rounded-xl border border-ink-300 bg-white p-4">
+              <div className="text-lg font-medium leading-snug text-ink-900">
+                {focus.label}
               </div>
 
-              {expanded === t.id && (
-                <>
-                  <GoalField
-                    initial={t.goalStatement ?? ''}
-                    onSave={(v) => void setGoal(t.id, v)}
-                  />
-                  {/*
-                    An offer on every rung, not just the first. Which one you
-                    are ready for is your call and your therapist's, not ours.
-                  */}
-                  <Link
-                    to={`/exposure/${t.id}`}
-                    className="tap mt-3 block w-full rounded-xl bg-ink-900 px-4 py-3
-                               text-center font-medium text-white active:bg-ink-800"
-                  >
-                    Work on this one
-                  </Link>
-                </>
-              )}
-            </li>
-          ))}
-        </ol>
+              <p className="mt-1 text-sm text-ink-500">
+                {focus.baselineAnxiety != null &&
+                  `You rated this ${focus.baselineAnxiety} out of 10`}
+                {done > 0 &&
+                  ` · ${done} ${done === 1 ? 'exposure' : 'exposures'} so far`}
+              </p>
 
-        <Link
-          to="/avoidance"
-          className="tap block text-sm text-ink-400 underline decoration-ink-300 underline-offset-4 active:text-ink-700"
-        >
-          Add something else to the list
-        </Link>
+
+              <Link
+                to={`/exposure/${focus.id}`}
+                className="tap mt-4 block w-full rounded-xl bg-ink-900 px-4 py-3
+                           text-center font-medium text-white active:bg-ink-800"
+              >
+                {done > 0 ? 'Do this one again' : 'Do an exposure'}
+              </Link>
+
+              {/*
+                Shown as prose once written, editable on request. Rendering the
+                statement and its input together showed the same sentence twice.
+              */}
+              <GoalField
+                key={focus.id}
+                initial={focus.goalStatement ?? ''}
+                onSave={(v) => void setGoal(focus.id, v)}
+              />
+            </div>
+          </section>
+        )}
+
+        {rest.length > 0 && (
+          <section>
+            <h2 className="mb-2 text-sm font-medium text-ink-500">
+              The rest of your list
+            </h2>
+            <p className="mb-2 text-sm leading-relaxed text-ink-500">
+              Roughly in order of difficulty. Tap any of them to work on that
+              one instead — you decide when to move on.
+            </p>
+            <ul className="space-y-2">
+              {rest.map((t) => (
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    onClick={() => setFocusId(t.id)}
+                    className="tap flex w-full items-center gap-3 rounded-xl border
+                               border-ink-200 bg-white p-3 text-left active:bg-ink-50"
+                  >
+                    <span className="flex-1 text-[15px] text-ink-700">
+                      {t.label}
+                    </span>
+                    <span className="flex-none text-xs text-ink-400">
+                      {t.baselineAnxiety ?? '–'}/10
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <div className="flex flex-wrap gap-x-4 gap-y-2 border-t border-ink-200 pt-6">
+          <Link
+            to="/avoidance"
+            className="tap text-sm text-ink-500 underline decoration-ink-300 underline-offset-4 active:text-ink-800"
+          >
+            Add something
+          </Link>
+          {active.length > 1 && (
+            <button
+              type="button"
+              onClick={() => setReordering(true)}
+              className="tap text-sm text-ink-500 underline decoration-ink-300 underline-offset-4 active:text-ink-800"
+            >
+              Change the order
+            </button>
+          )}
+        </div>
 
         {retired.length > 0 && <Retired triggers={retired} />}
       </div>
@@ -227,10 +307,7 @@ function Retired({ triggers }: { triggers: Trigger[] }) {
       </h2>
       <ul className="mt-2 space-y-2">
         {triggers.map((t) => (
-          <li
-            key={t.id}
-            className="rounded-xl border border-ink-200 bg-white p-3"
-          >
+          <li key={t.id} className="rounded-xl border border-ink-200 bg-white p-3">
             <div className="text-[15px] text-ink-800">{t.label}</div>
             {t.graduatedAt && (
               <div className="mt-0.5 text-xs text-ink-400">
@@ -261,19 +338,37 @@ function GoalField({
   onSave: (value: string) => void
 }) {
   const [value, setValue] = useState(initial)
+  const [editing, setEditing] = useState(initial.trim().length === 0)
 
   // Saved on every keystroke, not on blur. Blur does not reliably fire when
   // someone taps the bottom nav or hits back on a phone, and silently losing
   // what a person just wrote about why this matters to them is the worst
-  // possible small bug in this app. Local writes are cheap and the row simply
-  // stays dirty until the next push.
+  // possible small bug in this app.
   function update(next: string) {
     setValue(next)
     onSave(next)
   }
 
+  if (!editing) {
+    return (
+      <div className="mt-4 border-t border-ink-100 pt-3">
+        <p className="text-sm italic leading-relaxed text-ink-600">
+          so I can {value}
+        </p>
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className="tap mt-1 text-xs text-ink-400 underline decoration-ink-300
+                     underline-offset-4 active:text-ink-700"
+        >
+          Change this
+        </button>
+      </div>
+    )
+  }
+
   return (
-    <div className="mt-3 border-t border-ink-100 pt-3">
+    <div className="mt-4 border-t border-ink-100 pt-3">
       <label className="mb-1.5 block text-sm text-ink-600">
         I want to get past this so I can…
       </label>
