@@ -228,7 +228,7 @@ export function ErpSession() {
           </p>
 
           <Button full onClick={() => setPhase('after')}>
-            I am done
+            I have finished this
           </Button>
         </div>
       </Screen>

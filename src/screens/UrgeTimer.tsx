@@ -178,7 +178,7 @@ export function UrgeTimer() {
               htmlFor="new-compulsion"
               className="block text-sm font-medium text-ink-700"
             >
-              Something else
+              Something not on the list
             </label>
             <input
               id="new-compulsion"
@@ -431,7 +431,7 @@ export function UrgeTimer() {
               void finish({ resisted: false, durationSeconds: elapsed })
             }
           >
-            Stopped
+            I have stopped
           </Button>
         </div>
       </Screen>

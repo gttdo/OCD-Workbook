@@ -100,7 +100,7 @@ export function FearLadder() {
             className="tap block w-full rounded-xl bg-ink-900 px-4 py-3 text-center
                        font-medium text-white active:bg-ink-800"
           >
-            Start the list
+            List what you avoid
           </Link>
         </div>
       </Screen>
@@ -120,7 +120,7 @@ export function FearLadder() {
             to="/avoidance"
             className="tap block text-sm text-ink-500 underline decoration-ink-300 underline-offset-4"
           >
-            Add something to the list
+            Add something you avoid
           </Link>
           <Retired triggers={retired} />
         </div>
@@ -272,7 +272,7 @@ export function FearLadder() {
             to="/avoidance"
             className="tap text-sm text-ink-500 underline decoration-ink-300 underline-offset-4 active:text-ink-800"
           >
-            Add something
+            Add something you avoid
           </Link>
           {active.length > 1 && (
             <button
