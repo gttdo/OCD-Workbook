@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { db, nowIso, stamp } from '@/db'
 import { currentUserId, markOnboardedLocally } from '@/lib/session'
 import { Button } from '@/components/ui/Button'
+import { CycleDiagram } from '@/components/CycleDiagram'
 
 /**
  * Onboarding — five screens, about ninety seconds, ending in action.
@@ -156,14 +157,24 @@ function TheCycle() {
     <div>
       <Title>Here is what keeps it going.</Title>
 
-      <ol className="mt-6 space-y-3">
-        {CYCLE_STAGES.slice(0, shown).map((stage, i) => {
+      <div className="mt-5">
+        <CycleDiagram shown={shown} />
+      </div>
+
+      {/*
+        Only the newest stage is shown in prose. The earlier ones are on the
+        diagram, and repeating them as a growing stack of cards pushed the
+        button off-screen and buried the beat that matters.
+      */}
+      <ol className="mt-4 space-y-3">
+        {CYCLE_STAGES.slice(Math.max(0, shown - 1), shown).map((stage) => {
+          const i = shown - 1
           const isTurn = i === CYCLE_STAGES.length - 1
           return (
             <li
               key={stage.label}
               className={[
-                'rounded-xl border p-4',
+                'animate-fade-up rounded-xl border p-4',
                 isTurn
                   ? 'border-ink-800 bg-ink-900 text-white'
                   : 'border-ink-200 bg-white',
