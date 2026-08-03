@@ -5,6 +5,7 @@ import { db, nowIso, stamp } from '@/db'
 import type { Anxiety, Compulsion } from '@/db/types'
 import { currentUserId } from '@/lib/session'
 import { formatClock, useElapsedSeconds } from '@/lib/useElapsed'
+import { CountdownRing } from '@/components/CountdownRing'
 import { formatDuration } from '@/lib/behaviour'
 import { Screen } from '@/components/AppShell'
 import { Teach } from '@/components/Teach'
@@ -347,8 +348,6 @@ export function UrgeTimer() {
   // ── waiting it out ────────────────────────────────────────────────────────
   if (phase === 'delaying') {
     const target = delayTarget * 60
-    const remaining = Math.max(target - elapsed, 0)
-    const reached = remaining === 0
 
     return (
       <Screen>
@@ -357,12 +356,7 @@ export function UrgeTimer() {
           <h1 className="text-xl font-semibold text-ink-900">{chosen?.label}</h1>
 
           <div className="py-4">
-            <div className="text-6xl font-semibold tabular-nums text-ink-900">
-              {formatClock(reached ? elapsed : remaining)}
-            </div>
-            <div className="mt-2 text-sm text-ink-500">
-              {reached ? 'past your target, and still going' : 'left to wait'}
-            </div>
+            <CountdownRing elapsed={elapsed} target={target} />
           </div>
 
           <p className="text-[15px] leading-relaxed text-ink-600">

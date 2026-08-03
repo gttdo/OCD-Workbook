@@ -133,7 +133,7 @@ export function Screen({
   children: React.ReactNode
 }) {
   return (
-    <div className="mx-auto w-full max-w-xl px-4 pb-12 pt-8 sm:px-6 sm:pt-10">
+    <div className="animate-fade-up mx-auto w-full max-w-xl px-4 pb-12 pt-8 sm:px-6 sm:pt-10">
       {title && (
         <h1 className="text-2xl font-semibold text-ink-900">{title}</h1>
       )}

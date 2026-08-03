@@ -9,7 +9,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-ink-900 text-white active:bg-ink-800',
+  primary: 'bg-ink-900 text-white shadow-card active:bg-ink-800',
   secondary: 'border border-ink-300 bg-white text-ink-800 active:bg-ink-50',
   quiet: 'text-ink-500 active:text-ink-800',
 }
@@ -29,7 +29,8 @@ export function Button({
   return (
     <button
       className={[
-        'tap rounded-xl px-4 py-3 font-medium transition-colors',
+        'tap rounded-xl px-4 py-3 font-medium',
+        'transition-all duration-150 ease-out active:scale-[0.98]',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-calm-600 focus-visible:ring-offset-2',
         'disabled:opacity-40',
         VARIANTS[variant],

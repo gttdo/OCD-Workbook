@@ -8,10 +8,10 @@ interface Props {
 }
 
 export function Card({ children, to, className = '' }: Props) {
-  const base = `rounded-xl border border-ink-200 bg-white p-4 ${className}`
+  const base = `rounded-xl border border-ink-200 bg-white p-4 shadow-card transition-shadow ${className}`
   if (to) {
     return (
-      <Link to={to} className={`tap block ${base} active:bg-ink-50`}>
+      <Link to={to} className={`tap block ${base} hover:shadow-lift active:bg-ink-50`}>
         {children}
       </Link>
     )
@@ -34,7 +34,7 @@ export function Stat({
   hint?: string
 }) {
   return (
-    <div className="rounded-xl bg-white border border-ink-200 p-4">
+    <div className="rounded-xl border border-ink-200 bg-white p-4 shadow-card">
       {/*
         Proportional figures, not tabular. Equal-width digits make a large
         standalone number look loose; tabular belongs where numbers align

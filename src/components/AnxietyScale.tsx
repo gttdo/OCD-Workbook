@@ -12,36 +12,63 @@ interface Props {
 const LEVELS: Anxiety[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
 /**
- * The 1–10 SUDS rating. Reused in the avoidance inventory, the fear ladder,
- * every exposure session, and the compulsion timer — so it gets to be the one
- * genuinely polished control in the app.
+ * The 1–10 distress rating — the most reused control in the app, and the only
+ * place colour encodes intensity.
  *
- * Colour carries intensity here and nowhere else in the UI. A high rating is
- * never styled as failure: during exposure work, high numbers are the point.
+ * Only the selected value is coloured. An earlier idea tinted every step up to
+ * the choice, which turns the control into a progress bar: a 9 would read as
+ * nearly-full, and "high score" is the last thing a distress rating should
+ * suggest.
+ *
+ * The ramp is teal rather than red. Someone rating a 9 is already frightened;
+ * the interface does not need to agree with them.
  */
+function band(value: Anxiety): { fill: string; text: string } {
+  if (value <= 2) return { fill: 'bg-level-slight', text: 'text-level-slight' }
+  if (value <= 5) return { fill: 'bg-level-moderate', text: 'text-level-moderate' }
+  if (value <= 8)
+    return { fill: 'bg-level-substantial', text: 'text-level-substantial' }
+  return { fill: 'bg-level-extreme', text: 'text-level-extreme' }
+}
+
 export function AnxietyScale({ value, onChange, label, inExposure }: Props) {
   return (
     <div>
       {label && (
-        <div className="mb-2 text-sm font-medium text-ink-700">{label}</div>
+        <div className="mb-2.5 text-sm font-medium text-ink-700">{label}</div>
       )}
 
-      <div className="grid grid-cols-10 gap-1">
+      {/*
+        Two rows of five, not ten across. Ten 44px targets plus gaps needs
+        476px; a phone gives 375px, so a single row silently overflowed and
+        clipped the 10. Five columns leaves targets comfortably above the
+        minimum instead of trading accessibility for a straight line.
+      */}
+      <div
+        className="grid grid-cols-5 gap-2"
+        role="radiogroup"
+        aria-label={label ?? 'Distress rating out of ten'}
+      >
         {LEVELS.map((level) => {
           const selected = value === level
           return (
             <button
               key={level}
               type="button"
+              role="radio"
+              aria-checked={selected}
               onClick={() => onChange(level)}
               aria-label={`${level} out of 10, ${anxietyLabel(level)}`}
-              aria-pressed={selected}
               className={[
-                'tap flex items-center justify-center rounded-md text-sm font-semibold',
-                'transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-calm-600',
+                'tap flex h-11 items-center justify-center rounded-lg text-[15px] font-semibold',
+                'transition-all duration-200 ease-out',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-calm-600 focus-visible:ring-offset-2',
+                // Lifts rather than scales. At 375px the ten columns are
+                // narrow enough that scaling the selected one overlaps its
+                // neighbour and hides the 10 entirely.
                 selected
-                  ? 'bg-ink-800 text-white'
-                  : 'bg-ink-100 text-ink-600 active:bg-ink-200',
+                  ? `${band(level).fill} -translate-y-0.5 text-white shadow-lift`
+                  : 'bg-ink-100 text-ink-500 active:bg-ink-200',
               ].join(' ')}
             >
               {level}
@@ -50,25 +77,26 @@ export function AnxietyScale({ value, onChange, label, inExposure }: Props) {
         })}
       </div>
 
-      <div className="mt-2 flex justify-between text-xs text-ink-400">
+      <div className="mt-2 flex justify-between text-[11px] text-ink-400">
         <span>Slight</span>
-        <span>Moderate</span>
-        <span>Substantial</span>
         <span>Extreme</span>
       </div>
 
-      {value != null && (
-        <p className="mt-3 text-sm text-ink-600">
-          <span className="font-medium text-ink-800">
-            {value} · {anxietyLabel(value)}
-          </span>
-          {inExposure && value >= 7 && (
-            <span className="ml-1 text-calm-700">
-              — that's high, and that's what makes this work.
+      {/* Height reserved so picking a value never shifts what is under it. */}
+      <div className="mt-3 min-h-[1.25rem]">
+        {value != null && (
+          <p key={value} className="animate-fade-in text-sm text-ink-600">
+            <span className={`font-medium ${band(value).text}`}>
+              {value} · {anxietyLabel(value)}
             </span>
-          )}
-        </p>
-      )}
+            {inExposure && value >= 7 && (
+              <span className="ml-1 text-ink-500">
+                — that's high, and that's what makes this work.
+              </span>
+            )}
+          </p>
+        )}
+      </div>
     </div>
   )
 }
