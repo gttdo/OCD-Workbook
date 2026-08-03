@@ -5,6 +5,7 @@ import { db, nowIso } from '@/db'
 import type { Trigger } from '@/db/types'
 import { Screen } from '@/components/AppShell'
 import { Teach } from '@/components/Teach'
+import { unretire } from '@/lib/graduation'
 
 /**
  * The fear ladder.
@@ -18,14 +19,15 @@ import { Teach } from '@/components/Teach'
  * your own treatment.
  */
 export function FearLadder() {
-  const triggers = useLiveQuery(
-    () =>
-      db.triggers
-        .filter((t) => !t.deletedAt && t.status !== 'graduated')
-        .toArray(),
+  const all = useLiveQuery(
+    () => db.triggers.filter((t) => !t.deletedAt).toArray(),
     [],
     [],
   )
+  const triggers = all.filter((t) => t.status !== 'graduated')
+  const retired = all
+    .filter((t) => t.status === 'graduated')
+    .sort((a, b) => (b.graduatedAt ?? '').localeCompare(a.graduatedAt ?? ''))
 
   const [expanded, setExpanded] = useState<string | null>(null)
 
@@ -69,7 +71,10 @@ export function FearLadder() {
     })
   }
 
-  if (triggers.length === 0) {
+  // Checked against ALL triggers, not just active ones. Someone who has retired
+  // everything has an empty ladder for the best possible reason, and telling
+  // them to start a list would erase what they just finished.
+  if (all.length === 0) {
     return (
       <Screen title="Your ladder">
         <div className="space-y-4">
@@ -95,6 +100,15 @@ export function FearLadder() {
       intro="Least difficult first. That is where you start, and you work down the list over time."
     >
       <div className="space-y-6">
+        {triggers.length === 0 && (
+          <p className="rounded-xl border border-calm-600 bg-calm-50 p-4 text-[15px] leading-relaxed text-ink-800">
+            Nothing left on the ladder. Everything you listed is retired — if
+            something new comes up, or one of these returns, you can add it back
+            any time.
+          </p>
+        )}
+
+        {triggers.length > 0 && (
         <Teach id="ladder" title="Why order matters">
           <p>
             Working upward means each step is hard but survivable, and each one
@@ -106,6 +120,7 @@ export function FearLadder() {
             actually feels like.
           </p>
         </Teach>
+        )}
 
         <ol className="space-y-2">
           {ordered.map((t, i) => (
@@ -189,8 +204,51 @@ export function FearLadder() {
         >
           Add something else to the list
         </Link>
+
+        {retired.length > 0 && <Retired triggers={retired} />}
       </div>
     </Screen>
+  )
+}
+
+/**
+ * Fears that are done.
+ *
+ * Kept visible rather than deleted: this is the only accumulating thing in the
+ * app, and it accumulates finished work rather than consecutive days. Bringing
+ * one back is offered plainly, because a fear returning is expected in this
+ * work and should not feel like undoing an achievement.
+ */
+function Retired({ triggers }: { triggers: Trigger[] }) {
+  return (
+    <section className="border-t border-ink-200 pt-6">
+      <h2 className="text-sm font-medium text-ink-500">
+        Retired ({triggers.length})
+      </h2>
+      <ul className="mt-2 space-y-2">
+        {triggers.map((t) => (
+          <li
+            key={t.id}
+            className="rounded-xl border border-ink-200 bg-white p-3"
+          >
+            <div className="text-[15px] text-ink-800">{t.label}</div>
+            {t.graduatedAt && (
+              <div className="mt-0.5 text-xs text-ink-400">
+                since {new Date(t.graduatedAt).toLocaleDateString()}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => void unretire(t.id)}
+              className="tap mt-2 text-sm text-ink-400 underline decoration-ink-300
+                         underline-offset-4 active:text-ink-700"
+            >
+              This one is back
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 

@@ -4,6 +4,8 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { db, nowIso, stamp } from '@/db'
 import type { Anxiety } from '@/db/types'
 import { currentUserId } from '@/lib/session'
+import { isEligibleToRetire } from '@/lib/graduation'
+import { RetireOffer } from '@/components/RetireOffer'
 import { Screen } from '@/components/AppShell'
 import { Teach } from '@/components/Teach'
 import { AnxietyScale } from '@/components/AnxietyScale'
@@ -47,6 +49,7 @@ export function ErpSession() {
   const [peak, setPeak] = useState<Anxiety | null>(null)
   const [skipRating, setSkipRating] = useState(false)
   const [resisted, setResisted] = useState<boolean | null>(null)
+  const [canRetire, setCanRetire] = useState(false)
 
   if (trigger === undefined) return null
   if (trigger === null) {
@@ -119,6 +122,8 @@ export function ErpSession() {
       updatedAt: nowIso(),
       syncedAt: null,
     })
+    // Checked after saving, so this session counts toward the run.
+    setCanRetire(await isEligibleToRetire(trigger!.id))
     setPhase('result')
   }
 
@@ -354,10 +359,18 @@ export function ErpSession() {
           </div>
         )}
 
-        <p className="text-[15px] leading-relaxed text-ink-600">
-          Doing this one again is what makes it stick. The gap between what you
-          expect and what happens is the thing that shrinks the fear.
-        </p>
+        {canRetire ? (
+          <RetireOffer
+            triggerId={trigger.id}
+            label={trigger.label}
+            onRetired={() => setCanRetire(false)}
+          />
+        ) : (
+          <p className="text-[15px] leading-relaxed text-ink-600">
+            Doing this one again is what makes it stick. The gap between what
+            you expect and what happens is the thing that shrinks the fear.
+          </p>
+        )}
 
         <div className="space-y-3">
           <Button full onClick={() => navigate('/ladder')}>
