@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { db, nowIso, stamp } from '@/db'
-import { getLocalUserId, markOnboardedLocally } from '@/lib/session'
+import { currentUserId, markOnboardedLocally } from '@/lib/session'
 import { Button } from '@/components/ui/Button'
 
 /**
@@ -52,9 +52,7 @@ export function Onboarding() {
 
   async function finish() {
     setSaving(true)
-    const userId = getLocalUserId()
-    // Set before navigating: the gate reads this synchronously during render.
-    markOnboardedLocally()
+    const userId = currentUserId()
     const existing = await db.profile.get(userId)
     if (existing) {
       await db.profile.update(userId, { onboardedAt: nowIso(), updatedAt: nowIso(), syncedAt: null })
@@ -64,6 +62,8 @@ export function Onboarding() {
         id: userId,
       })
     }
+    // Set before navigating: the gate reads this synchronously during render.
+    markOnboardedLocally(userId)
     navigate('/screener')
   }
 
@@ -93,21 +93,6 @@ export function Onboarding() {
           </Button>
         )}
 
-        {/*
-          Deliberately quiet, and only on the first screen. Someone returning on
-          a new device needs a way back to their own work; someone new should
-          barely register it. A button here would read as a wall, which is
-          exactly what onboarding is not supposed to be.
-        */}
-        {step === 0 && (
-          <Link
-            to="/signin"
-            className="tap block text-center text-sm text-ink-400 underline
-                       decoration-ink-300 underline-offset-4 active:text-ink-700"
-          >
-            I have used this before
-          </Link>
-        )}
       </div>
     </div>
   )

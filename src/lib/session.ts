@@ -1,42 +1,48 @@
-import { newId } from '@/db'
-
-const LOCAL_USER_KEY = 'ocd-workbook.local-user-id'
-
 /**
- * Every local record needs an owner id before the user has signed in.
+ * The signed-in user's id.
  *
- * We mint a device-local id immediately so the app is usable on first open,
- * then re-key those rows to the Supabase auth id once a magic link is
- * confirmed. Nothing is gated behind sign-in.
+ * Auth is required before any screen that writes data renders, so by the time
+ * a screen calls `currentUserId()` a session exists. That guarantee is what
+ * lets this be a module singleton rather than context threaded through every
+ * component — and it is enforced by the gate in App.tsx, not by convention.
+ *
+ * This replaces an earlier device-local id that was minted before sign-in and
+ * re-keyed afterwards. That design let people use the app without an account,
+ * and it cost more than it bought: records owned by an id that had to be
+ * rewritten later, a sync path that had to adopt them, and a profile row whose
+ * primary key changed underneath it.
  */
-export function getLocalUserId(): string {
-  let id = localStorage.getItem(LOCAL_USER_KEY)
-  if (!id) {
-    id = newId()
-    localStorage.setItem(LOCAL_USER_KEY, id)
+let userId: string | null = null
+
+export function setCurrentUserId(id: string | null): void {
+  userId = id
+}
+
+export function currentUserId(): string {
+  if (!userId) {
+    throw new Error(
+      'currentUserId() called with no session. A screen that writes data rendered outside the auth gate.',
+    )
   }
-  return id
+  return userId
 }
-
-export function setLocalUserId(id: string): void {
-  localStorage.setItem(LOCAL_USER_KEY, id)
-}
-
-const ONBOARDED_KEY = 'ocd-workbook.onboarded'
 
 /**
- * A synchronous mirror of profile.onboardedAt.
+ * Synchronous mirror of profile.onboardedAt, keyed per account.
  *
- * The onboarding gate runs during render, but Dexie's live query resolves
- * asynchronously — so navigating away the instant onboarding finishes would
- * otherwise be judged against a stale profile and bounced straight back.
- * localStorage is readable synchronously, which closes that window. The
- * database remains the source of truth; this is only a race guard.
+ * The gate runs during render but Dexie resolves asynchronously, so navigating
+ * away the instant onboarding finishes would otherwise be judged against a
+ * stale profile and bounce straight back. Keyed by user id so a second account
+ * on the same device still gets its own onboarding.
  */
-export function markOnboardedLocally(): void {
-  localStorage.setItem(ONBOARDED_KEY, '1')
+function onboardedKey(id: string): string {
+  return `ocd-workbook.onboarded.${id}`
 }
 
-export function hasOnboardedLocally(): boolean {
-  return localStorage.getItem(ONBOARDED_KEY) === '1'
+export function markOnboardedLocally(id: string): void {
+  localStorage.setItem(onboardedKey(id), '1')
+}
+
+export function hasOnboardedLocally(id: string): boolean {
+  return localStorage.getItem(onboardedKey(id)) === '1'
 }

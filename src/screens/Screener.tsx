@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { db, stamp } from '@/db'
 import type { CompulsionForm, OcdSubtype } from '@/db/types'
-import { getLocalUserId } from '@/lib/session'
+import { currentUserId } from '@/lib/session'
 import {
   COMPULSION_FORM_OPTIONS,
   CORE_SECTIONS,
@@ -44,7 +44,7 @@ export function Screener() {
 
   async function finish() {
     setSaving(true)
-    const userId = getLocalUserId()
+    const userId = currentUserId()
     const compulsionForm: CompulsionForm | null =
       form === 'both' ? 'behavioral' : form
 
@@ -68,7 +68,7 @@ export function Screener() {
       await db.profile.add({ ...stamp(userId, { primaryCompulsionForm: compulsionForm }), id: userId })
     }
 
-    navigate('/')
+    navigate('/home')
   }
 
   if (step === resultStep) {

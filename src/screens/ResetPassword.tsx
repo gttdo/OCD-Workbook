@@ -22,7 +22,7 @@ export function ResetPassword({ auth }: { auth: AuthState }) {
     const { error } = await setPassword(password)
     setBusy(false)
     if (error) setError(error)
-    else navigate('/', { replace: true })
+    else navigate('/home', { replace: true })
   }
 
   if (!auth.loading && !auth.signedIn) {

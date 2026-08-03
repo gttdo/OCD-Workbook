@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { db, nowIso, stamp } from '@/db'
 import type { Anxiety, Compulsion } from '@/db/types'
-import { getLocalUserId } from '@/lib/session'
+import { currentUserId } from '@/lib/session'
 import { formatClock, useElapsedSeconds } from '@/lib/useElapsed'
 import { formatDuration } from '@/lib/behaviour'
 import { Screen } from '@/components/AppShell'
@@ -59,7 +59,7 @@ export function UrgeTimer() {
 
   async function createAndChoose() {
     const minutes = Number(baselineMinutes)
-    const row = stamp(getLocalUserId(), {
+    const row = stamp(currentUserId(), {
       label: newLabel.trim(),
       form: 'behavioral' as const,
       baselineDurationSeconds:
@@ -88,7 +88,7 @@ export function UrgeTimer() {
   /** Written at the start so an abandoned attempt is still on the record. */
   async function openEvent(extra: Record<string, unknown>) {
     const now = nowIso()
-    const row = stamp(getLocalUserId(), {
+    const row = stamp(currentUserId(), {
       compulsionId: chosen!.id,
       triggerId: chosen!.triggerId ?? null,
       occurredAt: now,
@@ -467,7 +467,7 @@ export function UrgeTimer() {
         </p>
 
         <div className="space-y-3">
-          <Button full onClick={() => navigate('/')}>
+          <Button full onClick={() => navigate('/home')}>
             Done
           </Button>
         </div>

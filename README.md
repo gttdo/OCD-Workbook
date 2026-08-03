@@ -73,10 +73,16 @@ npm install
 npm run dev
 ```
 
-The app runs fully without Supabase credentials — it degrades to "works, but
-this device only". To enable sync, copy `.env.example` to `.env.local`, fill in
-your project URL and anon key, and apply the migrations in
-`supabase/migrations/` in order.
+Supabase credentials are required — the app is behind an account. Copy
+`.env.example` to `.env.local`, fill in your project URL and anon key, and apply
+the migrations in `supabase/migrations/` in order.
+
+**Auth is required; a connection is not.** Supabase keeps the session locally
+and the data lives in IndexedDB, so after the first sign-in everything works
+with no signal and catches up later. That distinction is the whole point —
+exposures happen in bathrooms, car parks and at three in the morning, and an
+app that needs a network at that moment has failed at the one thing it exists
+for.
 
 ## Deploying
 

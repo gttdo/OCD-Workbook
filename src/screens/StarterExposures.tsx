@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, nowIso, stamp } from '@/db'
 import type { Anxiety, ExposurePrompt } from '@/db/types'
-import { getLocalUserId } from '@/lib/session'
+import { currentUserId } from '@/lib/session'
 import { STARTER_CATEGORIES, STARTER_EXPOSURES } from '@/data/starterExposures'
 import { Screen } from '@/components/AppShell'
 import { Teach } from '@/components/Teach'
@@ -53,7 +53,7 @@ export function StarterExposures() {
   }
 
   async function begin(prompt: ExposurePrompt | null, text?: string) {
-    const row = stamp(getLocalUserId(), {
+    const row = stamp(currentUserId(), {
       promptId: prompt?.id ?? null,
       kind: 'uncertainty_starter' as const,
       startedAt: nowIso(),

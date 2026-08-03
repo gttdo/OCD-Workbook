@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { db, stamp, tombstone } from '@/db'
 import type { Anxiety, TriggerCategory } from '@/db/types'
-import { getLocalUserId } from '@/lib/session'
+import { currentUserId } from '@/lib/session'
 import { Screen } from '@/components/AppShell'
 import { Teach } from '@/components/Teach'
 import { AnxietyScale } from '@/components/AnxietyScale'
@@ -39,7 +39,7 @@ export function AvoidanceInventory() {
   async function add() {
     if (!canAdd) return
     await db.triggers.add(
-      stamp(getLocalUserId(), {
+      stamp(currentUserId(), {
         label: label.trim(),
         category,
         baselineAnxiety: anxiety,

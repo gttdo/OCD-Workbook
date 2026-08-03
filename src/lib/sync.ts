@@ -165,7 +165,6 @@ async function push(spec: TableSpec, userId: string): Promise<number> {
     delete clean.syncedAt
     for (const field of spec.localOnly ?? []) delete clean[field]
 
-    // Rows created before sign-in carry a device-local owner id; re-key them.
     if (owner === 'user_id') clean.userId = userId
     else clean.id = userId
 
@@ -212,8 +211,7 @@ async function pull(spec: TableSpec, userId: string): Promise<number> {
 
   for (const raw of data) {
     const remote = keysToCamel(raw as Record<string, unknown>)
-    // `profile` has no remote owner column, but the local model carries one and
-    // adoptLocalRecords filters on it. Put it back.
+    // `profile` has no remote owner column, but the local model carries one.
     if (owner === 'id') remote.userId = userId
     const id = remote.id as string
     const remoteUpdated = remote.updatedAt as string
@@ -249,45 +247,6 @@ async function pullPrompts(): Promise<number> {
     data.map((r) => keysToCamel(r as Record<string, unknown>)) as never[],
   )
   return data.length
-}
-
-/**
- * On first sign-in, everything written under the device-local id belongs to
- * this account. Re-key it and mark it dirty so the next push carries it up.
- */
-export async function adoptLocalRecords(
-  previousUserId: string,
-  authUserId: string,
-): Promise<number> {
-  if (previousUserId === authUserId) return 0
-  let count = 0
-
-  for (const spec of TABLES) {
-    const table = db[spec.local] as unknown as {
-      filter: (fn: (r: Record<string, unknown>) => boolean) => {
-        toArray: () => Promise<Record<string, unknown>[]>
-      }
-      bulkPut: (rows: unknown[]) => Promise<unknown>
-    }
-
-    const mine = await table.filter((r) => r.userId === previousUserId).toArray()
-    if (mine.length === 0) continue
-
-    await table.bulkPut(
-      mine.map((r) => ({
-        ...r,
-        // `profile` is keyed by user id, so the row identity moves too.
-        ...(spec.local === 'profile' ? { id: authUserId } : {}),
-        userId: authUserId,
-        syncedAt: null,
-      })),
-    )
-
-    if (spec.local === 'profile') await db.profile.delete(previousUserId)
-    count += mine.length
-  }
-
-  return count
 }
 
 /**

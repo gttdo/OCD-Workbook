@@ -23,7 +23,7 @@ const stroke = {
 
 const DESTINATIONS: Destination[] = [
   {
-    to: '/',
+    to: '/home',
     label: 'Home',
     icon: (
       <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden>
@@ -75,7 +75,7 @@ export function AppShell() {
           <NavLink
             key={d.to}
             to={d.to}
-            end={d.to === '/'}
+            end={d.to === '/home'}
             className={({ isActive }) =>
               [
                 'tap flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
@@ -105,7 +105,7 @@ export function AppShell() {
           <NavLink
             key={d.to}
             to={d.to}
-            end={d.to === '/'}
+            end={d.to === '/home'}
             className={({ isActive }) =>
               [
                 'tap flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] transition-colors',

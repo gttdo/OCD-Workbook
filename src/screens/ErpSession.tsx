@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db, nowIso, stamp } from '@/db'
 import type { Anxiety } from '@/db/types'
-import { getLocalUserId } from '@/lib/session'
+import { currentUserId } from '@/lib/session'
 import { Screen } from '@/components/AppShell'
 import { Teach } from '@/components/Teach'
 import { AnxietyScale } from '@/components/AnxietyScale'
@@ -60,7 +60,7 @@ export function ErpSession() {
   }
 
   async function begin() {
-    const userId = getLocalUserId()
+    const userId = currentUserId()
 
     let compulsionId: string | null = null
     if (resisting.trim()) {
