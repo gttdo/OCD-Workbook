@@ -99,6 +99,13 @@ export function Home({ syncState }: { syncState: SyncState }) {
           />
         </Card>
 
+        <Card to="/cycle">
+          <Row
+            title="A week of noticing"
+            sub="See the shape of it before changing anything"
+          />
+        </Card>
+
         <Card to="/values">
           <Row
             title="What this is for"
