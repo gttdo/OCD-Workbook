@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Screen } from '@/components/AppShell'
 import { Button } from '@/components/ui/Button'
 import { setPassword, signOut } from '@/lib/supabase'
+import { ReminderSettings } from '@/components/ReminderSettings'
+import { WindDown } from '@/components/WindDown'
 import { sync } from '@/lib/sync'
 import type { AuthState } from '@/lib/useAuth'
 import type { SyncState } from '@/lib/useSync'
@@ -28,6 +30,18 @@ export function More({
         <section>
           <h2 className="mb-3 text-sm font-medium text-ink-500">Your data</h2>
           <SignedIn email={auth.email} syncState={syncState} />
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-sm font-medium text-ink-500">Practising</h2>
+          <ReminderSettings />
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-sm font-medium text-ink-500">
+            When you are done
+          </h2>
+          <WindDown />
         </section>
 
         <section>

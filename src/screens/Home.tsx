@@ -5,6 +5,7 @@ import { Card, Stat } from '@/components/ui/Card'
 import { SyncNotice } from '@/components/SyncNotice'
 import { behaviourSummary, formatDuration } from '@/lib/behaviour'
 import { isOnlyManagingUrges } from '@/lib/usage'
+import { WindDown } from '@/components/WindDown'
 import type { SyncState } from '@/lib/useSync'
 
 export function Home({ syncState }: { syncState: SyncState }) {
@@ -135,6 +136,10 @@ export function Home({ syncState }: { syncState: SyncState }) {
           </p>
         </div>
       )}
+
+      <div className="mt-8">
+        <WindDown compact />
+      </div>
 
       <SyncNotice state={syncState} />
     </Screen>
