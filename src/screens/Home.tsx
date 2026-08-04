@@ -4,11 +4,13 @@ import { Screen } from '@/components/AppShell'
 import { Card, Stat } from '@/components/ui/Card'
 import { SyncNotice } from '@/components/SyncNotice'
 import { behaviourSummary, formatDuration } from '@/lib/behaviour'
+import { isOnlyManagingUrges } from '@/lib/usage'
 import type { SyncState } from '@/lib/useSync'
 
 export function Home({ syncState }: { syncState: SyncState }) {
   const screenings = useLiveQuery(() => db.screenings.toArray(), [], [])
   const summary = useLiveQuery(() => behaviourSummary(), [], null)
+  const onlyUrges = useLiveQuery(() => isOnlyManagingUrges(), [], false)
 
   const hasScreened = screenings.length > 0
   const hasDoneAnything =
@@ -96,6 +98,13 @@ export function Home({ syncState }: { syncState: SyncState }) {
           />
         </Card>
 
+        <Card to="/values">
+          <Row
+            title="What this is for"
+            sub="The parts of your life you want back"
+          />
+        </Card>
+
         <Card to="/screener">
           <Row
             title="Where things stand"
@@ -107,6 +116,25 @@ export function Home({ syncState }: { syncState: SyncState }) {
           />
         </Card>
       </div>
+
+      {/*
+        Holding off is real work, but it is defensive. A fear shrinks when you
+        go toward it, and someone can log urges for months while never
+        approaching anything — looking busy on this very screen. Said once,
+        without scolding.
+      */}
+      {onlyUrges && (
+        <div className="mt-8 rounded-xl border border-ink-200 bg-white p-4 shadow-card">
+          <p className="text-[15px] leading-relaxed text-ink-800">
+            You have been holding off on urges, and that is genuinely hard.
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-ink-600">
+            The part that shrinks a fear is going toward it on purpose, rather
+            than waiting for it to come to you. Whenever you are ready, there is
+            a rung on your ladder for it.
+          </p>
+        </div>
+      )}
 
       <SyncNotice state={syncState} />
     </Screen>

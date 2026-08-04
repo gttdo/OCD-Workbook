@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '@/db'
 import { Button } from '@/components/ui/Button'
 import { retire } from '@/lib/graduation'
 
@@ -23,14 +25,20 @@ export function RetireOffer({
   label: string
   onRetired?: () => void
 }) {
+  const values = useLiveQuery(
+    () => db.values.filter((v) => !v.deletedAt).toArray(),
+    [],
+    [],
+  )
   const [open, setOpen] = useState(false)
   const [reclaimed, setReclaimed] = useState('')
+  const [tagged, setTagged] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
 
   async function confirm() {
     setBusy(true)
-    await retire(triggerId, reclaimed)
+    await retire(triggerId, reclaimed, tagged)
     setBusy(false)
     setDone(true)
     onRetired?.()
@@ -85,7 +93,39 @@ export function RetireOffer({
         className="tap mt-3 w-full rounded-lg border border-ink-300 bg-white px-3 py-2.5
                    text-[16px] placeholder:text-ink-300 focus:border-calm-600 focus:outline-none"
       />
-      <div className="mt-3 space-y-2">
+      {/* Only offered if there is something to point at. */}
+      {values.length > 0 && (
+        <div className="mt-4">
+          <div className="mb-2 text-sm text-ink-600">Which part of your life?</div>
+          <div className="flex flex-wrap gap-2">
+            {values.map((v) => {
+              const on = tagged.includes(v.id)
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() =>
+                    setTagged(
+                      on ? tagged.filter((id) => id !== v.id) : [...tagged, v.id],
+                    )
+                  }
+                  aria-pressed={on}
+                  className={[
+                    'tap rounded-full border px-3 py-1.5 text-sm transition-all duration-150',
+                    on
+                      ? 'border-calm-700 bg-calm-700 text-white'
+                      : 'border-ink-300 bg-white text-ink-600',
+                  ].join(' ')}
+                >
+                  {v.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-4 space-y-2">
         <Button full disabled={busy} onClick={() => void confirm()}>
           {busy ? 'One moment…' : 'Retire it'}
         </Button>

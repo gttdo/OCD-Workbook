@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link } from 'react-router-dom'
 import { db, nowIso } from '@/db'
@@ -7,6 +7,8 @@ import { Screen } from '@/components/AppShell'
 import { Teach } from '@/components/Teach'
 import { Button } from '@/components/ui/Button'
 import { unretire } from '@/lib/graduation'
+import { record } from '@/lib/usage'
+import { SoftInterrupt } from '@/components/SoftInterrupt'
 
 /**
  * The ladder.
@@ -36,6 +38,8 @@ export function FearLadder() {
 
   const [reordering, setReordering] = useState(false)
   const [focusId, setFocusId] = useState<string | null>(null)
+  // Bumped when the goal editor is reopened, so the interrupt re-checks.
+  const [editSignal, setEditSignal] = useState(0)
 
   const active = [...all.filter((t) => t.status !== 'graduated')].sort((a, b) => {
     const ar = a.ladderRank, br = b.ladderRank
@@ -56,6 +60,10 @@ export function FearLadder() {
   // A default, not a directive: the easiest rung not yet retired.
   const focus = active.find((t) => t.id === focusId) ?? active[0] ?? null
   const rest = active.filter((t) => t.id !== focus?.id)
+
+  useEffect(() => {
+    if (focus) void record('view', 'trigger', focus.id)
+  }, [focus?.id])
 
   async function persist(list: Trigger[]) {
     const ts = nowIso()
@@ -231,6 +239,21 @@ export function FearLadder() {
                 key={focus.id}
                 initial={focus.goalStatement ?? ''}
                 onSave={(v) => void setGoal(focus.id, v)}
+                onBeginEditing={() => {
+                  // Once per attempt, not per keystroke — the signal is how
+                  // often someone comes back to reword it, not how much they
+                  // typed. Recording each character would trip instantly.
+                  void record('edit', 'trigger', focus.id)
+                  setEditSignal((n) => n + 1)
+                }}
+              />
+            </div>
+
+            <div className="mt-3">
+              <SoftInterrupt
+                entityType="trigger"
+                entityId={focus.id}
+                trigger={editSignal}
               />
             </div>
           </section>
@@ -333,9 +356,11 @@ function Retired({ triggers }: { triggers: Trigger[] }) {
 function GoalField({
   initial,
   onSave,
+  onBeginEditing,
 }: {
   initial: string
   onSave: (value: string) => void
+  onBeginEditing?: () => void
 }) {
   const [value, setValue] = useState(initial)
   const [editing, setEditing] = useState(initial.trim().length === 0)
@@ -357,7 +382,10 @@ function GoalField({
         </p>
         <button
           type="button"
-          onClick={() => setEditing(true)}
+          onClick={() => {
+            setEditing(true)
+            onBeginEditing?.()
+          }}
           className="tap mt-1 text-xs text-ink-400 underline decoration-ink-300
                      underline-offset-4 active:text-ink-700"
         >

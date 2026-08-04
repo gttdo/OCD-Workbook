@@ -58,6 +58,7 @@ async function recordStatus(
 export async function retire(
   triggerId: string,
   reclaimed?: string,
+  valueIds: string[] = [],
 ): Promise<void> {
   const trigger = await db.triggers.get(triggerId)
   if (!trigger) return
@@ -76,7 +77,7 @@ export async function retire(
         occurredAt: nowIso(),
         description: reclaimed.trim(),
         triggerId,
-        valueIds: [],
+        valueIds,
       }),
     )
   }
