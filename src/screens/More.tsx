@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Screen } from '@/components/AppShell'
 import { Button } from '@/components/ui/Button'
 import { setPassword, signOut } from '@/lib/supabase'
@@ -30,6 +31,23 @@ export function More({
         <section>
           <h2 className="mb-3 text-sm font-medium text-ink-500">Your data</h2>
           <SignedIn email={auth.email} syncState={syncState} />
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-sm font-medium text-ink-500">Reference</h2>
+          <Link
+            to="/concepts"
+            className="tap flex items-center justify-between gap-3 rounded-xl border
+                       border-ink-200 bg-white p-4 shadow-card active:bg-ink-50"
+          >
+            <span>
+              <span className="block font-medium text-ink-900">The words</span>
+              <span className="mt-0.5 block text-sm text-ink-500">
+                Terms your therapist may use without explaining
+              </span>
+            </span>
+            <span aria-hidden className="flex-none text-ink-400">→</span>
+          </Link>
         </section>
 
         <section>

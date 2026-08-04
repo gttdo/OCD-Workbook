@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { record } from '@/lib/usage'
+import { SoftInterrupt } from '@/components/SoftInterrupt'
 import type { SessionPoint } from '@/lib/progress'
 
 /**
@@ -20,11 +22,14 @@ const PAD = { top: 10, right: 10, bottom: 18, left: 22 }
 export function HabituationChart({
   points,
   label,
+  triggerId,
 }: {
   points: SessionPoint[]
   label: string
+  triggerId?: string
 }) {
   const [active, setActive] = useState<number | null>(null)
+  const [opened, setOpened] = useState(0)
 
   if (points.length < 2) return null
 
@@ -159,10 +164,34 @@ export function HabituationChart({
         value — the middle points carry no direct label, so without this they
         would be unreachable by keyboard, screen reader, or print.
       */}
-      <details className="mt-2">
+      {/*
+        The table has to stay — it is the accessible equivalent of the plot and
+        the only way to reach the middle values without tapping. But re-reading
+        your own past ratings is structurally a checking paradigm, and repeated
+        checking measurably erodes confidence in your own memory. So access is
+        kept and the pattern is noticed instead.
+      */}
+      <details
+        className="mt-2"
+        onToggle={(e) => {
+          if (!(e.currentTarget as HTMLDetailsElement).open || !triggerId) return
+          void record('view', 'trigger-numbers', triggerId)
+          setOpened((n) => n + 1)
+        }}
+      >
         <summary className="tap cursor-pointer text-xs text-ink-400 underline decoration-ink-300 underline-offset-4">
           See the numbers
         </summary>
+
+        {triggerId && (
+          <div className="mt-2">
+            <SoftInterrupt
+              entityType="trigger-numbers"
+              entityId={triggerId}
+              trigger={opened}
+            />
+          </div>
+        )}
         <table className="mt-2 w-full text-left text-xs">
           <thead>
             <tr className="text-ink-400">

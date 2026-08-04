@@ -16,6 +16,7 @@ import { SignIn } from '@/screens/SignIn'
 import { StarterExposures } from '@/screens/StarterExposures'
 import { UrgeTimer } from '@/screens/UrgeTimer'
 import { Values } from '@/screens/Values'
+import { Concepts } from '@/screens/Concepts'
 import { hasOnboardedLocally } from '@/lib/session'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
@@ -53,6 +54,7 @@ export default function App() {
         <Route path="/practice" element={<StarterExposures />} />
         <Route path="/urge" element={<UrgeTimer />} />
         <Route path="/values" element={<Values />} />
+        <Route path="/concepts" element={<Concepts />} />
         <Route path="/progress" element={<Progress />} />
         <Route path="/more" element={<More auth={auth} syncState={syncState} />} />
       </Route>

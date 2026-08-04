@@ -135,7 +135,11 @@ function TriggerCard({ progress }: { progress: TriggerProgress }) {
 
       {points.length >= 2 && (
         <div className="mt-3">
-          <HabituationChart points={points} label={trigger.label} />
+          <HabituationChart
+            points={points}
+            label={trigger.label}
+            triggerId={trigger.id}
+          />
         </div>
       )}
 

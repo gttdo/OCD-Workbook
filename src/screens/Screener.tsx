@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { db, stamp } from '@/db'
 import type { CompulsionForm, OcdSubtype } from '@/db/types'
 import { currentUserId } from '@/lib/session'
+import { VIGNETTES, VIGNETTE_FRAMING } from '@/data/vignettes'
 import {
   COMPULSION_FORM_OPTIONS,
   CORE_SECTIONS,
@@ -270,6 +271,34 @@ function Result({
           ? 'Your answers line up with the pattern that OCD tends to follow — a thought that will not leave, and something you do to make it quieter.'
           : 'Your answers do not show the full pattern OCD usually follows. That does not mean nothing is going on, and it does not mean this workbook is not useful to you.'}
       </p>
+
+      {/*
+        Placed here on purpose. Someone has just spent five minutes ticking
+        boxes about intrusive thoughts, which for harm and taboo obsessions in
+        particular is the moment shame is loudest. Recognising yourself in an
+        ordinary description of someone else does more than any reassurance
+        would — and unlike reassurance, it does not need repeating.
+      */}
+      {top.length > 0 && (
+        <div className="mt-6">
+          <div className="text-sm font-medium text-ink-500">
+            How this tends to look
+          </div>
+          <div className="mt-2 space-y-2">
+            {VIGNETTES.filter((v) => top.includes(v.subtype)).map((v) => (
+              <p
+                key={v.subtype}
+                className="rounded-xl border border-ink-200 bg-white p-4 text-[15px] leading-relaxed text-ink-700 shadow-card"
+              >
+                {v.text}
+              </p>
+            ))}
+          </div>
+          <p className="mt-2 text-sm leading-relaxed text-ink-500">
+            {VIGNETTE_FRAMING}
+          </p>
+        </div>
+      )}
 
       {top.length > 0 && (
         <div className="mt-6 rounded-xl border border-ink-200 bg-white p-4">

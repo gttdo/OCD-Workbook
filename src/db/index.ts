@@ -89,6 +89,17 @@ export function touch<T extends object>(patch: T): T & { updatedAt: string; sync
   return { ...patch, updatedAt: nowIso(), syncedAt: null }
 }
 
+/**
+ * Completed records are not editable, and that is a clinical decision rather
+ * than a missing feature.
+ *
+ * "Redoing exposures until they feel just right" and "mentally reviewing
+ * exposures for possible errors" are both named ERP compulsions. A finished
+ * exposure or urge event is a record of what happened, not a draft — the
+ * update calls in the exercise screens all belong to a session still in
+ * progress. Please do not add an edit path for a completed one.
+ */
+
 /** Soft delete — tombstones must reach the server, so never hard-delete. */
 export function tombstone(): { deletedAt: string; updatedAt: string; syncedAt: null } {
   const ts = nowIso()
